@@ -1,0 +1,30 @@
+{
+  "name": "MarsCorodvaPlugin",
+  "version": "0.0.1",
+  "description": "MarsCorodvaPlugin",
+  "cordova": {
+    "id": "om.marsChat.phonegap",
+    "platforms": [
+      "android",
+       "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "author": "",
+  "license": "Apache-2.0",
+  "engines": {
+    "cordovaDependencies": {
+      "3.0.0": {
+        "cordova": ">100"
+      }
+    }
+  }
+}
