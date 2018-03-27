@@ -18,7 +18,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.RemoteException;
 
-import com.accenture.hybrid.utils.Utils;
 import com.tencent.mars.BaseEvent;
 import com.tencent.mars.app.AppLogic;
 import com.accenture.hybrid.utils.print.BaseConstants;
