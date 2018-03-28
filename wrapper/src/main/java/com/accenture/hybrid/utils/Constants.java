@@ -12,12 +12,16 @@
 * limitations under the License.
 */
 
-package com.accenture.hybrid.core;
+package com.accenture.hybrid.utils;
 
-import com.accenture.hybrid.wrapper.remote.PushMessage;
+/**
+ * Created by caoshaokun on 16/12/20.
+ */
+public class Constants {
 
-public abstract class BusinessHandler {
+    public static final int PUSHCMD = 10001;
+    public static final String PUSHACTION = "com.tencent.mars.RecvMessagePush";
 
-    public abstract boolean handleRecvMessage(PushMessage pushMessage);
+    public static final int STORAGE_REQUESTCODE = 123;
 
 }
