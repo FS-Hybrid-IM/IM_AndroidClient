@@ -112,6 +112,8 @@ public class MarsServiceNative extends Service implements MarsService {
 
         //
         Log.d(TAG, "mars service native created");
+        android.util.Log.e("MarsServiceNative",
+                "onCreate: mars service native create");
     }
 
     @Override

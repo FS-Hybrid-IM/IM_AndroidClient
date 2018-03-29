@@ -2,19 +2,19 @@
 
 module.exports = {
     initPlatform: function(data, successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback, "marsChat", "initPlatform", [JSON.stringify(data)]);
+        cordova.exec(successCallback, errorCallback, "marsChat", "initPlatform", [data]);
     },
 
     setForeground: function(data, successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback, "marsChat", "setForeground", [JSON.stringify(data)]);
+        cordova.exec(successCallback, errorCallback, "marsChat", "setForeground", [data]);
     },
 
-    registerMessageHandler: function(data, successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback, "marsChat", "registerMessageHandler", [JSON.stringify(data)]);
+    onMessageReceive: function(successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "marsChat", "registerMessageHandler", []);
     },
 
     sendTextMessage: function(data, successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback, "marsChat", "sendTextMessage", [JSON.stringify(data)]);
+        cordova.exec(successCallback, errorCallback, "marsChat", "sendTextMessage", [data]);
     },
 
     getConversationList: function(successCallback, errorCallback) {

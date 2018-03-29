@@ -2,7 +2,7 @@
 * Tencent is pleased to support the open source community by making Mars available.
 * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
 *
-* Licensed under the MIT License (the "License"); you may not use this file except in 
+* Licensed under the MIT License (the "License"); you may not use this file except in
 * compliance with the License. You may obtain a copy of the License at
 * http://opensource.org/licenses/MIT
 *
@@ -94,6 +94,9 @@ public class MarsServiceProxy implements ServiceConnection {
         gClassName = SERVICE_DEFAULT_CLASSNAME;
 
         inst = new MarsServiceProxy();
+
+        android.util.Log.e("MarsServiceProxy",
+                "init: new MarsServiceProxy()");
     }
 
     public static void setOnPushMessageListener(int cmdId, PushMessageHandler pushMessageHandler) {
@@ -105,6 +108,9 @@ public class MarsServiceProxy implements ServiceConnection {
     }
 
     public static void send(MarsTaskWrapper marsTaskWrapper) {
+
+        android.util.Log.e("MarsServiceProxy", "send:inst.queue.offer(marsTaskWrapper)");
+
         inst.queue.offer(marsTaskWrapper);
     }
 
@@ -133,6 +139,9 @@ public class MarsServiceProxy implements ServiceConnection {
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder binder) {
         Log.d(TAG, "remote mars service connected");
+
+        android.util.Log.e("MarsServiceProxy",
+                "onServiceConnected: remote mars service connected");
 
         try {
             service = MarsService.Stub.asInterface(binder);
@@ -185,10 +194,14 @@ public class MarsServiceProxy implements ServiceConnection {
     private void continueProcessTaskWrappers() {
         try {
             if (service == null) {
+                android.util.Log.e("MarsServiceProxy",
+                        "continueProcessTaskWrappers: try to bind remote mars service");
                 Log.d(TAG, "try to bind remote mars service, packageName: %s, className: %s", gPackageName, gClassName);
                 Intent i = new Intent().setClassName(gPackageName, gClassName);
                 gContext.startService(i);
                 if (!gContext.bindService(i, inst, Service.BIND_AUTO_CREATE)) {
+                    android.util.Log.e("MarsServiceProxy",
+                            "remote mars service bind failed");
                     Log.e(TAG, "remote mars service bind failed");
                 }
 
@@ -203,6 +216,8 @@ public class MarsServiceProxy implements ServiceConnection {
             }
 
             try {
+                android.util.Log.e("MarsServiceProxy",
+                        "continueProcessTaskWrappers: sending task" + taskWrapper);
                 Log.d(TAG, "sending task = %s", taskWrapper);
                 final String cgiPath = taskWrapper.getProperties().getString(MarsTaskProperty.OPTIONS_CGI_PATH);
                 final Integer globalCmdID = GLOBAL_CMD_ID_MAP.get(cgiPath);

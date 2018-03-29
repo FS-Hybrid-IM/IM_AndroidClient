@@ -2,7 +2,7 @@
 * Tencent is pleased to support the open source community by making Mars available.
 * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
 *
-* Licensed under the MIT License (the "License"); you may not use this file except in 
+* Licensed under the MIT License (the "License"); you may not use this file except in
 * compliance with the License. You may obtain a copy of the License at
 * http://opensource.org/licenses/MIT
 *
@@ -21,6 +21,7 @@ import android.os.Looper;
 import com.accenture.hybrid.chat.proto.Chat;
 import com.accenture.hybrid.wrapper.remote.MarsTaskProperty;
 import com.accenture.hybrid.wrapper.remote.NanoMarsTaskWrapper;
+import android.util.Log;
 
 /**
  * Send Text messaging task
@@ -45,6 +46,9 @@ public class TextMessageTask extends NanoMarsTaskWrapper<Chat.SendMessageRequest
         request.topic = msgRequest.getTopic();
         properties = MarsTaskProperty.getPropertyBundle(property);
 
+        Log.d("TextMessageTask", " request:" + request.toString()
+            + " properties:" + properties.toString());
+
     }
 
     @Override
@@ -60,9 +64,12 @@ public class TextMessageTask extends NanoMarsTaskWrapper<Chat.SendMessageRequest
     @Override
     public void onPostDecode(Chat.SendMessageResponse response) {
         if (response.errCode == Chat.SendMessageResponse.ERR_OK) {
+
+            Log.d("TextMessageTask", " callback = onOK");
             callback = onOK;
 
         } else {
+            Log.d("TextMessageTask", "  callback = onError");
             callback = onError;
         }
     }
@@ -72,16 +79,19 @@ public class TextMessageTask extends NanoMarsTaskWrapper<Chat.SendMessageRequest
         if (callback == null) {
             callback = onError;
         }
-
+        Log.d("TextMessageTask", "onTaskEnd post callback");
         uiHandler.post(callback);
     }
 
     public TextMessageTask onOK(Runnable onOK) {
+
+        Log.d("TextMessageTask", "onOK");
         this.onOK = onOK;
         return this;
     }
 
     public TextMessageTask onError(Runnable onError) {
+        Log.d("TextMessageTask", "onError");
         this.onError = onError;
         return this;
     }

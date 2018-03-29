@@ -70,6 +70,9 @@ public class MarsServiceStub extends MarsService.Stub implements StnLogic.ICallB
 
     @Override
     public int send(final MarsTaskWrapper taskWrapper, Bundle taskProperties) throws RemoteException {
+
+        android.util.Log.d("MarsServiceStub", " send" );
+
         final StnLogic.Task _task = new StnLogic.Task(StnLogic.Task.EShort, 0, "", null);
 
         // Set host & cgi path
@@ -91,6 +94,7 @@ public class MarsServiceStub extends MarsService.Stub implements StnLogic.ICallB
             _task.channelSelect = StnLogic.Task.ELong;
 
         } else {
+            android.util.Log.e("MarsServiceStub", "invalid channel strategy");
             Log.e(TAG, "invalid channel strategy");
             throw new RemoteException("Invalid Channel Strategy");
         }
@@ -105,11 +109,14 @@ public class MarsServiceStub extends MarsService.Stub implements StnLogic.ICallB
 
         // Send
         Log.i(TAG, "now start task with id %d", _task.taskID);
+        android.util.Log.e("MarsServiceStub", "now start task with id" + _task.taskID);
         StnLogic.startTask(_task);
         if (StnLogic.hasTask(_task.taskID)) {
+            android.util.Log.e("MarsServiceStub", "stn task started with id" + _task.taskID);
             Log.i(TAG, "stn task started with id %d", _task.taskID);
 
         } else {
+            android.util.Log.e("MarsServiceStub", "stn task start failed with id" + _task.taskID);
             Log.e(TAG, "stn task start failed with id %d", _task.taskID);
         }
 
