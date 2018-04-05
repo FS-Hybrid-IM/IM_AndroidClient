@@ -16,6 +16,7 @@ package com.accenture.hybrid.wrapper.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -41,16 +42,6 @@ public class MarsServiceNative extends Service implements MarsService {
     private static final String TAG = "Mars.Sample.MarsServiceNative";
 
     private MarsServiceStub stub;
-    private static MarsServiceProfileFactory gFactory = new MarsServiceProfileFactory() {
-        @Override
-        public MarsServiceProfile createMarsServiceProfile() {
-            return new DefaultMarsServiceProfile();
-        }
-    };
-
-    public static void setProfileFactory(MarsServiceProfileFactory factory) {
-        gFactory = factory;
-    }
 
     @Override
     public int send(MarsTaskWrapper taskWrapper, Bundle taskProperties) throws RemoteException {
@@ -91,8 +82,22 @@ public class MarsServiceNative extends Service implements MarsService {
     public void onCreate() {
         super.onCreate();
 
-        final MarsServiceProfile profile = gFactory.createMarsServiceProfile();
+        String PREFS_NAME = "chat.user.profile";
+        SharedPreferences userProfile = getSharedPreferences(PREFS_NAME, MODE_WORLD_WRITEABLE);
+        String userName = userProfile.getString("chatUserName", "");
+        String serverHost = userProfile.getString("chatServerHost", "");
+
+        DefaultMarsServiceProfile profile = new DefaultMarsServiceProfile();
+        profile.setLongLinkHost(serverHost);
+
         stub = new MarsServiceStub(this, profile);
+
+        android.util.Log.e("MarsServiceNative",
+                "onCreate profile LongHost:" + profile.longLinkHost()
+                        + " LongPorts:" + profile.longLinkPorts().toString()
+                        + " shortPort:" + profile.shortLinkPort()
+        );
+
 
         // set callback
         AppLogic.setCallBack(stub);

@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -28,6 +30,7 @@ import com.tencent.mars.xlog.Xlog;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.cordova.CallbackContext;
@@ -46,6 +49,8 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import static android.content.Context.MODE_WORLD_WRITEABLE;
+
 public class MarsChatCordovaPlugin extends CordovaPlugin {
 
     protected final static String permission = Manifest.permission.READ_EXTERNAL_STORAGE;
@@ -55,7 +60,11 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
     private static ArrayList<Bundle> messageStack = null;
 
+    private UserServerProfile userProfile = new UserServerProfile();
+
     private static CallbackContext messageReceiveCallbackContext;
+    private static CallbackContext messageSendCallbackContext;
+    private static CallbackContext conversationListCallbackContext;
 
     public static String covertHashMapToString(HashMap hashmap) {
 
@@ -162,41 +171,31 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
         if (action.equals("initPlatform")) {
 
-            final JSONObject msgObject = data.getJSONObject(0);
+            String serverHost = "";
+            String userName = "";
+
+            try {
+                serverHost = data.getJSONObject(0).getString("host");
+                userName = data.getJSONObject(0).getString("userName");
+
+            } catch (JSONException e) {
+                // TODO
+            }
+
+            this.userProfile.setUserName(userName);
+            this.userProfile.setLongLinkHost(serverHost);
+            this.setPreferenceProfile(userName, serverHost);
 
             AppLogic.AccountInfo accountInfo = new AppLogic.AccountInfo(
-                    new Random(System.currentTimeMillis() / 1000).nextInt(), msgObject.getString("userName"));
+                    new Random(System.currentTimeMillis() / 1000).nextInt(), userName);
 
             System.loadLibrary("stlport_shared");
             System.loadLibrary("marsxlog");
 
-            class CustomMarsServiceProfile extends DefaultMarsServiceProfile {
-
-                @Override
-                public String longLinkHost() {
-                    try {
-
-                        return msgObject.getString("host");
-
-                    } catch (JSONException e) {
-
-                        return null;
-                    }
-
-                }
-            }
-
-            MarsServiceNative.setProfileFactory(new MarsServiceProfileFactory() {
-                @Override
-                public MarsServiceProfile createMarsServiceProfile() {
-                    return new CustomMarsServiceProfile();
-                }
-            });
-
             MarsServiceProxy.init(this.cordova.getActivity().getApplicationContext(), null, null);
             MarsServiceProxy.inst.accountInfo = accountInfo;
 
-            this.callbackContext.success();
+            callbackContext.success();
             return true;
 
         } else if (action.equals("onMessageReceive")) {
@@ -218,6 +217,8 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
         } else if (action.equals("sendTextMessage")) {
 
+            this.messageSendCallbackContext = callbackContext;
+
             if (data == null || data.length() == 0 || data.length() > 1) {
                 JSONObject returnObj = new JSONObject();
                 addProperty(returnObj, KEY_ERROR, action);
@@ -228,13 +229,14 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
             JSONObject msgObject = data.getJSONObject(0);
 
             ChatMsgRequest msgRequest = new ChatMsgRequest();
-            msgRequest.setAccessToken("test_token");
-            msgRequest.setFrom(msgObject.getString("from"));
+            msgRequest.setAccessToken(this.userProfile.getAccessToken());
+            msgRequest.setFrom(this.userProfile.getUserName());
             msgRequest.setTo(msgObject.getString("to"));
             msgRequest.setText(msgObject.getString("text"));
             msgRequest.setTopic(msgObject.getString("topic"));
 
             MarsTaskProperty property = new MarsTaskProperty();
+            property.setHost(this.userProfile.getLongLinkHost());
             property.setCgiPach("/mars/sendmessage");
             property.setCmdId(Main.CMD_ID_SEND_MESSAGE);
             property.setLongSupport(true);
@@ -245,14 +247,14 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
                                 @Override
                                 public void run() {
-                                    MarsChatCordovaPlugin.this.callbackContext.success();
+                                    MarsChatCordovaPlugin.this.messageSendCallbackContext.success();
                                 }
 
                             }).onError(new Runnable() {
 
                                 @Override
                                 public void run() {
-                                    MarsChatCordovaPlugin.this.callbackContext.error("Send Message Failed!");
+                                    MarsChatCordovaPlugin.this.messageSendCallbackContext.error("Send Message Failed!");
                                 }
 
                             }));
@@ -261,8 +263,11 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
         } else if (action.equals("getConversationList")) {
 
+            this.conversationListCallbackContext = callbackContext;
+
             MarsTaskProperty property = new MarsTaskProperty();
             property.setCgiPach("/mars/getconvlist");
+            property.setHost(this.userProfile.getLongLinkHost());
 
             class MessageHandler implements ConversationResult {
                 @Override
@@ -271,6 +276,9 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
                     JSONArray returnList = new JSONArray();
 
                     for (ConversationEntity m : list) {
+
+                        Log.d("ConversationEntity",  "Name:" + m.getName()
+                        + " topic:" + m.getTopic() + " notice:" + m.getNotice());
                         JSONObject json = new JSONObject();
                         addProperty(json, "name", m.getName());
                         addProperty(json, "topic",m.getTopic());
@@ -278,7 +286,7 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
                         returnList.put(json);
                     }
 
-                    MarsChatCordovaPlugin.this.callbackContext.success(returnList);
+                    MarsChatCordovaPlugin.this.conversationListCallbackContext.success(returnList);
 
                 }
             }
@@ -291,6 +299,17 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
             return false;
         }
 
+    }
+
+    private void setPreferenceProfile(String userName, String serverHost) {
+
+        String PREFS_NAME = "chat.user.profile";
+        SharedPreferences userProfile = cordova.getActivity().getApplicationContext()
+                .getSharedPreferences(PREFS_NAME, MODE_WORLD_WRITEABLE);
+        SharedPreferences.Editor editor = userProfile.edit();
+        editor.putString("chatUserName", userName);
+        editor.putString("chatServerHost", serverHost);
+        editor.commit();
     }
 
     private void addProperty(JSONObject obj, String key, Object value) {

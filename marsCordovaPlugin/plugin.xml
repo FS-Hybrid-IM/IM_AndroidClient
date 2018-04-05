@@ -25,10 +25,10 @@
         </config-file>
 
         <source-file src="src/android/MarsChatCordovaPlugin.java" target-dir="src/com/accenture/mars/chat" />
+        <source-file src="src/android/UserServerProfile.java" target-dir="src/com/accenture/mars/chat" />
 
         <resource-file src="src/android/libs/mars-wrapper.aar" target="libs/mars-wrapper.aar" />
         <framework custom="true" src="src/android/build.gradle" type="gradleReference" />
-
 
         <config-file
             parent="/manifest"

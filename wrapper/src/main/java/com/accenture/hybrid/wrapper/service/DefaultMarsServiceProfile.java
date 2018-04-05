@@ -22,11 +22,11 @@ package com.accenture.hybrid.wrapper.service;
 
 public class DefaultMarsServiceProfile implements MarsServiceProfile {
 
-    public static final short MAGIC = 0x0110;
-    public static final short PRODUCT_ID = 200;
-    public static final String LONG_LINK_HOST = "10.204.13.145";
-    public static final int[] LONG_LINK_PORTS = new int[]{8081};
-    public static final int SHORT_LINK_PORT = 8080;
+    private short MAGIC = 0x0110;
+    private short PRODUCT_ID = 200;
+    private String LONG_LINK_HOST = "www.tencent.com";
+    private int[] LONG_LINK_PORTS = new int[]{8081};
+    private int SHORT_LINK_PORT = 8080;
 
     @Override
     public short magic() {
@@ -52,4 +52,26 @@ public class DefaultMarsServiceProfile implements MarsServiceProfile {
     public int shortLinkPort() {
         return SHORT_LINK_PORT;
     }
+
+
+    public void setMagic(short magic) {
+        this.MAGIC = magic;
+    }
+
+    public void setProductId(short id) {
+        this.PRODUCT_ID = id;
+    }
+
+    public void setLongLinkHost(String host) {
+        this.LONG_LINK_HOST = host;
+    }
+
+    public void setLongLinkPorts(int port) {
+        this.LONG_LINK_PORTS = new int[]{port};
+    }
+
+    public void setShortLinkPort(int port) {
+        this.SHORT_LINK_PORT = port;
+    }
+
 }

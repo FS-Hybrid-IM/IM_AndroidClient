@@ -1,5 +1,30 @@
-说明：
-该 demo 的界面借鉴于 weidi1989 的博客中 [Android 之高仿微信聊天的界面](http://blog.csdn.net/way_ping_li/article/details/8008435)。
-对博主开放分享的精神表示感谢。
+JS/TS内使用说明：
+1. 初始化系统（注意this.platform.ready()后使用）
+marsChat.initPlatform({
+          'userName': 'Marven',
+          'host': '10.204.13.145'
+}, function () {
+          console.log("Init Success ! ==> ");
+});
 
-如若博主介意我们用于 demo 中，请联系我们，我们会删除。谢谢。
+2. Send Text （注意Mars系统初始化后使用）
+ marsChat.sendTextMessage({
+     'to': 'ghsd',
+     'text': 'Hello Marven!',
+     'topic': '0'
+ }, function () {
+     console.log("sendTextMessage Success ! ==> ");
+ }, function () {
+     console.log("sendTextMessage Failed ! ==> ");
+ });
+
+3.Get Conversation List
+  marsChat.getConversationList(function (data) {
+    console.log(" ==> getConversationList Success !");
+    for(var i = 0; i < data.length; i++) {
+      console.log("Entity " + " Name:" + data[i].name
+        + " topic:" + data[i].topic + " notice:" + data[i].notice);
+    }
+  }, function () {
+     console.log(" ==> getConversationList Failed !");
+  });
