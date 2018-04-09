@@ -10,7 +10,7 @@ module.exports = {
     },
 
     onMessageReceive: function(successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback, "marsChat", "registerMessageHandler", []);
+        cordova.exec(successCallback, errorCallback, "marsChat", "onMessageReceive", []);
     },
 
     sendTextMessage: function(data, successCallback, errorCallback) {

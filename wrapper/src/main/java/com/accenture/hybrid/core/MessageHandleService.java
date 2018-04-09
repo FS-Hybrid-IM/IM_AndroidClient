@@ -17,6 +17,8 @@ package com.accenture.hybrid.core;
 import com.accenture.hybrid.wrapper.remote.PushMessage;
 import com.accenture.hybrid.wrapper.remote.PushMessageHandler;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MessageHandleService implements PushMessageHandler {
@@ -26,14 +28,29 @@ public class MessageHandleService implements PushMessageHandler {
     private Thread recvThread;
 
     private LinkedBlockingQueue<PushMessage> pushMessages = new LinkedBlockingQueue<>();
+    private Map<String, BusinessHandler> handlers = new HashMap<String, BusinessHandler>();
 
-    private BusinessHandler[] handlers = new BusinessHandler[] {
-            new MessageHandler(),
-            new StatisticHandler()
-    };
 
     public MessageHandleService() {
         this.start();
+    }
+
+    public void registerBusinessHandler(String key, BusinessHandler handler) {
+
+         handlers.put(key, handler);
+
+    }
+
+    public void unRegisterBusinessHandler(String key) {
+
+         handlers.remove(key);
+
+    }
+
+    public void unRegisterAllBusinessHandler() {
+        handlers.clear();
+        recvThread.interrupted();
+
     }
 
     public void start() {
@@ -51,7 +68,7 @@ public class MessageHandleService implements PushMessageHandler {
                 try {
                     PushMessage pushMessage = pushMessages.take();
                     if (pushMessage != null) {
-                        for (BusinessHandler handler : handlers) {
+                        for (BusinessHandler handler : handlers.values()) {
                             if (handler.handleRecvMessage(pushMessage)) {
                                 break;
                             }

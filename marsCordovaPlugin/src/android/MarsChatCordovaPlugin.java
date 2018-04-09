@@ -24,9 +24,13 @@ import com.accenture.hybrid.wrapper.service.DefaultMarsServiceProfile;
 import com.accenture.hybrid.wrapper.service.MarsServiceNative;
 import com.accenture.hybrid.wrapper.service.MarsServiceProfile;
 import com.accenture.hybrid.wrapper.service.MarsServiceProfileFactory;
+import com.accenture.hybrid.wrapper.remote.PushMessage;
 import com.accenture.hybrid.utils.print.BaseConstants;
 import com.tencent.mars.app.AppLogic;
 import com.tencent.mars.xlog.Xlog;
+
+import com.accenture.hybrid.chat.proto.Messagepush;
+import com.google.protobuf.nano.InvalidProtocolBufferNanoException;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -66,103 +70,77 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
     private static CallbackContext messageSendCallbackContext;
     private static CallbackContext conversationListCallbackContext;
 
-    public static String covertHashMapToString(HashMap hashmap) {
 
-        ObjectMapper mapper = new ObjectMapper();
-        try
-        {
-            //Convert Map to JSON
-            String json = mapper.writeValueAsString(hashmap);
+    class MessageHandler extends BusinessHandler {
 
-            return json;
-        }
-        catch (JsonGenerationException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        public MessageHandler() {
+
+            if (MarsChatCordovaPlugin.messageStack == null) {
+                MarsChatCordovaPlugin.messageStack = new ArrayList<Bundle>();
+            }
+
         }
 
-        return null;
+        @Override
+        public boolean handleRecvMessage(PushMessage pushMessage) {
 
+            switch (pushMessage.cmdId) {
+                case BaseConstants.PUSHMSG_CMDID:
+                    try {
+                        Messagepush.MessagePush message = Messagepush.MessagePush.parseFrom(pushMessage.buffer);
+                        Bundle bundle = new Bundle();
+                        bundle.putString("cmdId", pushMessage.cmdId);
+                        bundle.putString("msgfrom", message.from);
+                        bundle.putString("msgcontent", message.content);
+                        bundle.putString("msgtopic", message.topic);
+
+                        Log.d("handleRecvMessage",  "PushMessage from:" + message.from
+                        + " contetnt:" + message.content
+                        + " topic:" + message.topic);
+                        MarsChatCordovaPlugin.messageStack.add(bundle);
+                        sendReceiveMessage(bundle);
+                    } catch (InvalidProtocolBufferNanoException e) {
+                        Log.e(TAG, "%s", e.toString());
+                    }
+                    return true;
+                default:
+                    break;
+            }
+
+            return false;
+        }
     }
 
-//    class MessageHandler extends BusinessHandler {
-//
-//        private String JSCallback;
-//        private CordovaWebView webView;
-//
-//        public MessageHandler(String jsCallback) {
-//
-//            this.JSCallback = jsCallback;
-//
-//        }
-//
-//        @Override
-//        public boolean handleRecvMessage(HashMap<String, Object> message) {
-//
-//            Integer cmdId;
-//
-//            if (message.containsKey("cmdId")) {
-//                cmdId = Integer.parseInt((String)message.get("cmdId"));
-//            } else {
-//                return false;
-//            }
-//            String jsonString = MarsChatCordovaPlugin.covertHashMapToString(message);
-//
-//            if (jsonString == null) {
-//                return false;
-//            }
-//
-//            switch (cmdId) {
-//                case BaseConstants.PUSHMSG_CMDID:
-//                    webView.loadUrl("javascript:" + this.JSCallback + "(" + jsonString + ");");
-//                    return true;
-//                default:
-//                    break;
-//            }
-//
-//            return false;
-//        }
-//    }
-//
-//    private void onMessageReceive(final CallbackContext callbackContext) {
-//        MarsChatCordovaPlugin.messageReceiveCallbackContext = callbackContext;
-//        if (MarsChatCordovaPlugin.messageStack != null) {
-//            for (Bundle bundle : MarsChatCordovaPlugin.messageStack) {
-//                MarsChatCordovaPlugin.sendReceiveMessage(bundle);
-//            }
-//            MarsChatCordovaPlugin.messageStack.clear();
-//        }
-//    }
-//
-//    public static void sendReceiveMessage(Bundle bundle) {
-//        if (MarsChatCordovaPlugin.messageReceiveCallbackContext == null) {
-//            if (MarsChatCordovaPlugin.messageStack == null) {
-//                MarsChatCordovaPlugin.messageStack = new ArrayList<Bundle>();
-//            }
-//            notificationStack.add(bundle);
-//            return;
-//        }
-//        final CallbackContext callbackContext = MarsChatCordovaPlugin.messageReceiveCallbackContext;
-//        if (callbackContext != null && bundle != null) {
-//            JSONObject json = new JSONObject();
-//            Set<String> keys = bundle.keySet();
-//            for (String key : keys) {
-//                try {
-//                    json.put(key, bundle.get(key));
-//                } catch (JSONException e) {
-//                    callbackContext.error(e.getMessage());
-//                    return;
-//                }
-//            }
-//
-//            PluginResult pluginresult = new PluginResult(PluginResult.Status.OK, json);
-//            pluginresult.setKeepCallback(true);
-//            callbackContext.sendPluginResult(pluginresult);
-//        }
-//    }
+    private void onMessageReceive(final CallbackContext callbackContext) {
+        MarsChatCordovaPlugin.messageReceiveCallbackContext = callbackContext;
+        Log.d("onMessageReceive",  "Set keep Callback!!");
+        PluginResult pluginresult = new PluginResult(PluginResult.Status.OK, "");
+        pluginresult.setKeepCallback(true);
+        callbackContext.sendPluginResult(pluginresult);
+    }
+
+    private void sendReceiveMessage(Bundle bundle) {
+        Log.d("sendReceiveMessage",  "Enter");
+        final CallbackContext callbackContext = MarsChatCordovaPlugin.messageReceiveCallbackContext;
+        if (callbackContext != null && bundle != null) {
+            JSONObject json = new JSONObject();
+            Set<String> keys = bundle.keySet();
+            for (String key : keys) {
+                try {
+                    json.put(key, bundle.get(key));
+                } catch (JSONException e) {
+                    callbackContext.error(e.getMessage());
+                    return;
+                }
+            }
+
+            Log.d("sendReceiveMessage",  "Json:" + json.toString());
+
+            PluginResult pluginresult = new PluginResult(PluginResult.Status.OK, json);
+            pluginresult.setKeepCallback(true);
+            callbackContext.sendPluginResult(pluginresult);
+        }
+    }
 
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
@@ -195,24 +173,19 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
             MarsServiceProxy.init(this.cordova.getActivity().getApplicationContext(), null, null);
             MarsServiceProxy.inst.accountInfo = accountInfo;
 
+            MessageHandleService handlerService = new MessageHandleService();
+            handlerService.registerBusinessHandler("message", new MessageHandler());
+//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.CGIHISTORY_CMDID, handlerService);
+//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.CONNSTATUS_CMDID, handlerService);
+//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.FLOW_CMDID, handlerService);
+            MarsServiceProxy.setOnPushMessageListener(BaseConstants.PUSHMSG_CMDID, handlerService);
+//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.SDTRESULT_CMDID, handlerService);
+
             callbackContext.success();
             return true;
 
         } else if (action.equals("onMessageReceive")) {
-
-//            JSONObject msgObject = data.getJSONObject(0);
-//
-//            String JsCallback = msgObject.getString("JsCallback");
-//
-//            MessageHandleService handlerService = new MessageHandleService();
-//            handlerService.registerBusinessHandler("message", new MessageHandler(JsCallback));
-//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.CGIHISTORY_CMDID, handlerService);
-//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.CONNSTATUS_CMDID, handlerService);
-//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.FLOW_CMDID, handlerService);
-//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.PUSHMSG_CMDID, handlerService);
-//            MarsServiceProxy.setOnPushMessageListener(BaseConstants.SDTRESULT_CMDID, handlerService);
-//
-//            this.callbackContext.success();
+            onMessageReceive(callbackContext);
             return true;
 
         } else if (action.equals("sendTextMessage")) {
