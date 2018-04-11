@@ -28,3 +28,31 @@ marsChat.initPlatform({
   }, function () {
      console.log(" ==> getConversationList Failed !");
   });
+
+
+4. Receive Message
+
+  public msgList = [];
+
+  public successCallback = (data: any) => {
+
+    console.log("onMessageReceive Success ! ==> Content:" + data.msgcontent
+      + " Topic:" + data.msgtopic + " From:" + data.msgfrom);
+
+    if (data.msgcontent == undefined) {
+      return;
+    }
+
+    this.msgList = this.msgList.concat([{
+      "msgfrom": data.msgfrom,
+      "msgtopic": data.msgtopic,
+      "msgcontent": data.msgcontent
+    }]);
+
+    this.cd.detectChanges();
+
+  };
+  
+  ...
+  
+  marsChat.onMessageReceive(this.successCallback);

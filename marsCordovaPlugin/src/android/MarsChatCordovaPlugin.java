@@ -40,6 +40,7 @@ import java.util.List;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,6 +49,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -89,7 +91,7 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
                     try {
                         Messagepush.MessagePush message = Messagepush.MessagePush.parseFrom(pushMessage.buffer);
                         Bundle bundle = new Bundle();
-                        bundle.putString("cmdId", pushMessage.cmdId);
+                        bundle.putInt("cmdId", pushMessage.cmdId);
                         bundle.putString("msgfrom", message.from);
                         bundle.putString("msgcontent", message.content);
                         bundle.putString("msgtopic", message.topic);
@@ -100,7 +102,7 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
                         MarsChatCordovaPlugin.messageStack.add(bundle);
                         sendReceiveMessage(bundle);
                     } catch (InvalidProtocolBufferNanoException e) {
-                        Log.e(TAG, "%s", e.toString());
+                        Log.e("handleRecvMessage", e.toString());
                     }
                     return true;
                 default:
