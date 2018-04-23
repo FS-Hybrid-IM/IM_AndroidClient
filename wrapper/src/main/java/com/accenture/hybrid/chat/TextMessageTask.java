@@ -44,6 +44,7 @@ public class TextMessageTask extends NanoMarsTaskWrapper<Chat.SendMessageRequest
         request.to = msgRequest.getTo();
         request.text = msgRequest.getText();
         request.topic = msgRequest.getTopic();
+        request.deviceId = msgRequest.getDeviceId();
         properties = MarsTaskProperty.getPropertyBundle(property);
 
         Log.d("TextMessageTask", " request:" + request.toString()

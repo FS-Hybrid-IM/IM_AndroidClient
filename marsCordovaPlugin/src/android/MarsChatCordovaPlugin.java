@@ -12,8 +12,9 @@ import android.util.Log;
 
 import com.accenture.hybrid.chat.ChatMsgRequest;
 import com.accenture.hybrid.chat.ConversationEntity;
-import com.accenture.hybrid.chat.ConversationListTask;
+import com.accenture.hybrid.chat.ConversationRequest;
 import com.accenture.hybrid.chat.ConversationResult;
+import com.accenture.hybrid.chat.ConversationListTask;
 import com.accenture.hybrid.chat.TextMessageTask;
 import com.accenture.hybrid.core.BusinessHandler;
 import com.accenture.hybrid.core.MessageHandleService;
@@ -153,9 +154,11 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
             String serverHost = "";
             String userName = "";
+            String deviceId = "";
 
             try {
                 serverHost = data.getJSONObject(0).getString("host");
+                deviceId = data.getJSONObject(0).getString("deviceId");
                 userName = data.getJSONObject(0).getString("userName");
 
             } catch (JSONException e) {
@@ -164,7 +167,8 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
             this.userProfile.setUserName(userName);
             this.userProfile.setLongLinkHost(serverHost);
-            this.setPreferenceProfile(userName, serverHost);
+            this.userProfile.setDeviceId(deviceId);
+            this.setPreferenceProfile(userName, serverHost, deviceId);
 
             AppLogic.AccountInfo accountInfo = new AppLogic.AccountInfo(
                     new Random(System.currentTimeMillis() / 1000).nextInt(), userName);
@@ -209,6 +213,7 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
             msgRequest.setTo(msgObject.getString("to"));
             msgRequest.setText(msgObject.getString("text"));
             msgRequest.setTopic(msgObject.getString("topic"));
+            msgRequest.setDeviceId(this.userProfile.getDeviceId());
 
             MarsTaskProperty property = new MarsTaskProperty();
             property.setHost(this.userProfile.getLongLinkHost());
@@ -240,6 +245,11 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
             this.conversationListCallbackContext = callbackContext;
 
+            ConversationRequest conRequest = new ConversationRequest();
+            conRequest.setAccessToken(this.userProfile.getAccessToken());
+            conRequest.setDeviceId(this.userProfile.getDeviceId());
+            conRequest.setType(ConversationRequest.FilterType.DEFAULT);
+
             MarsTaskProperty property = new MarsTaskProperty();
             property.setCgiPach("/mars/getconvlist");
             property.setHost(this.userProfile.getLongLinkHost());
@@ -266,7 +276,7 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
                 }
             }
 
-            MarsServiceProxy.send(new ConversationListTask(property, new MessageHandler()));
+            MarsServiceProxy.send(new ConversationListTask(conRequest, property, new MessageHandler()));
             return true;
 
 
@@ -276,7 +286,7 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
 
     }
 
-    private void setPreferenceProfile(String userName, String serverHost) {
+    private void setPreferenceProfile(String userName, String serverHost, String deviceId) {
 
         String PREFS_NAME = "chat.user.profile";
         SharedPreferences userProfile = cordova.getActivity().getApplicationContext()
@@ -284,6 +294,7 @@ public class MarsChatCordovaPlugin extends CordovaPlugin {
         SharedPreferences.Editor editor = userProfile.edit();
         editor.putString("chatUserName", userName);
         editor.putString("chatServerHost", serverHost);
+        editor.putString("chatDeviceId", deviceId);
         editor.commit();
     }
 

@@ -2,7 +2,7 @@
 * Tencent is pleased to support the open source community by making Mars available.
 * Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
 *
-* Licensed under the MIT License (the "License"); you may not use this file except in 
+* Licensed under the MIT License (the "License"); you may not use this file except in
 * compliance with the License. You may obtain a copy of the License at
 * http://opensource.org/licenses/MIT
 *
@@ -33,8 +33,12 @@ public class ConversationListTask extends NanoMarsTaskWrapper<Main.ConversationL
 
     private ConversationResult result;
 
-    public ConversationListTask(MarsTaskProperty property, ConversationResult callbackResult) {
+    public ConversationListTask(ConversationRequest mRequst, MarsTaskProperty property,
+                                ConversationResult callbackResult) {
         super(new Main.ConversationListRequest(), new Main.ConversationListResponse());
+        request.accessToken = mRequst.getAccessToken();
+        request.deviceId = mRequst.getDeviceId();
+        request.type = mRequst.getType();
         properties = MarsTaskProperty.getPropertyBundle(property);
         result = callbackResult;
 
@@ -47,7 +51,9 @@ public class ConversationListTask extends NanoMarsTaskWrapper<Main.ConversationL
 
     @Override
     public void onPreEncode(Main.ConversationListRequest req) {
-        req.type = Main.ConversationListRequest.DEFAULT;
+        if(req.type < 0  || req.type > Main.ConversationListRequest.HOT) {
+            req.type = Main.ConversationListRequest.DEFAULT;
+        }
     }
 
     @Override

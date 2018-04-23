@@ -43,6 +43,7 @@ message ConversationListRequest {
 
     required string access_token = 1;
     required int32 type = 2;
+    required string device_id = 3;
 }
 
 message ConversationListResponse {

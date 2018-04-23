@@ -13,6 +13,8 @@ public class UserServerProfile {
     private String userName = "Mars";
     private String accessToken = "test_token";
 
+    private String deviceId = "12345678901234567890";
+
     public String getAccessToken() {
         return accessToken;
     }
@@ -60,6 +62,14 @@ public class UserServerProfile {
 
     public void setProduceId(short produceId) {
         this.produceId = produceId;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 
 

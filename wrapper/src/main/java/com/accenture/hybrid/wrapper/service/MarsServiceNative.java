@@ -84,7 +84,7 @@ public class MarsServiceNative extends Service implements MarsService {
 
         String PREFS_NAME = "chat.user.profile";
         SharedPreferences userProfile = getSharedPreferences(PREFS_NAME, MODE_WORLD_WRITEABLE);
-        String userName = userProfile.getString("chatUserName", "");
+//        String userName = userProfile.getString("chatUserName", "");
         String serverHost = userProfile.getString("chatServerHost", "");
 
         DefaultMarsServiceProfile profile = new DefaultMarsServiceProfile();
